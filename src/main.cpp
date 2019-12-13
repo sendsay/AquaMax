@@ -412,14 +412,12 @@ void loop()
 		if (waterLevelFlag == false) {		// signal
 			Serial.println("WaterLevel low!");
 			alarm(signal.WATER_LEVEL);
-			waterLevelFlag = true;
-			Serial.println("standart");		
+			waterLevelFlag = true;	
 		}
 		if (millis() - timings.timing2 > params.ALARM_REPEAT) //timer
 		{ 
 			timings.timing2 = millis(); 
 			waterLevelFlag = false;
-			Serial.println("timer");
 		} 
 	} else {
 		waterLevelFlag = false;
