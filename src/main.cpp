@@ -51,7 +51,7 @@ Ver. 0.1a
 */
 OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
 DallasTemperature sensors(&oneWire);// Pass our oneWire reference to Dallas Temperature. 
-RTC_DS1307 RTC;                 // Clock
+RTC_DS1307 rtc;                 // Clock
 DateTime now;                   // Now date time
 
 /*
@@ -63,9 +63,10 @@ DateTime now;                   // Now date time
 .##.......##.....##.##...###.##....##....##.....##..##.....##.##...###
 .##........#######..##....##..######.....##....####..#######..##....##
 */
-void alarm(int count);            // Alram signal
-void fishFeeding();               // Feeding fish
-void printTime(DateTime now);     // Print time and date
+void alarm(int count);            	// 	Alarm signal
+void fishFeeding();               	// 	Feeding fish
+void printTime(DateTime now);     	// 	Print time and date
+// void prepareToFeeding();			//	Prepare function fishFeeding
 
 /*
 .##.....##....###....########.
@@ -77,14 +78,15 @@ void printTime(DateTime now);     // Print time and date
 ....###....##.....##.##.....##
 */
 int status = 0;
-bool start = false;           // start flag for feeding
+bool startFeeding = true;           // startFeeding flag for feeding
 int feed = 0;
 int waterLevel = 0;           // water level
 bool alarmNow = false;        // now have alarm
-bool feedingNow = false;      // now feeding
+// bool feedingNow = false;      // now feeding
 float temperature = 0;        // temperature from sensor
 bool waterLevelFlag = false;	// for first signal
 bool tempOverFlag = false;		// for fist signal
+char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 /*
 ..######..########.########..##.....##..######..########..######.
@@ -97,13 +99,13 @@ bool tempOverFlag = false;		// for fist signal
 */
 struct Parameters 
 {
-	const unsigned long ALARM_REPEAT = 60000;     // in minutes
-	const int TEMP_MAX = 15;                                // max heating temp
-	const int TEMP_MIN = 5;                                 // min heating temp 
+const unsigned long ALARM_REPEAT = 1500000L;     			// in 15 minutes
+	const int TEMP_MAX = 26;                                // max heating temp
+	const int TEMP_MIN = 4;                                 // min heating temp 
 	const int FEED_FIRST_H = 7;								// first feeding hour
 	const int FEED_FIRST_M = 0;								// first feeding minute
-	const int FEED_SECOND_H = 19;							// first feeding hour
-	const int FEED_SECOND_M = 0;							// first feeding minute
+	// const int FEED_SECOND_H = 10;							// first feeding hour
+	// const int FEED_SECOND_M = 40;							// first feeding minute
 	
 };
 Parameters params;
@@ -141,35 +143,33 @@ Timings timings;
 */
 void fishFeeding() 
 {
-	if (not alarmNow) {
-
-		if (start == false) {
-			
-			Serial.println("Fish feeding!");
+	if (not alarmNow) 
+	{          
+		if (startFeeding == false) 
+		{				
+			Serial.print("Fish feeding! > ");
 			
 			alarm(signal.START_FEEDING);
 
-			digitalWrite(feeder,HIGH);  //start
-			start = true;
+			digitalWrite(feeder,HIGH);  //startFeeding
+			startFeeding = true;
 
-			// while (!(digitalRead(feederpos) == HIGH)) {}   
 			delay(2000);      
-			while (!(digitalRead(feederpos) == LOW) && (start == true)) {
+			while (!(digitalRead(feederpos) == LOW) && (startFeeding == true)) 
+			{
 			//Wait until rotate
 			}
 			
 			digitalWrite(feeder,LOW);   //stop
-			start = false;  
+			// startFeeding = false;  
 
 			alarm(signal.END_OPERATION);
 		}
-	feedingNow = false;
 	}
 }
 
 void alarm(int count) 
 {
-// if ((not feedingNow) || (not overTemp)) {	
 	if (not alarmNow) {
 		printTime(now);							
 		alarmNow = true;
@@ -180,177 +180,28 @@ void alarm(int count)
 			digitalWrite (buzzer,LOW);
 			delay(100);
 		}
-
 		alarmNow = false;
 	}
-// }
 }
 
-void printTime(DateTime now) {
-	Serial.print(now.month(), DEC);
-    Serial.print("/");
-    
-	Serial.print(now.day(), DEC);
-    Serial.print("/");
-
-    Serial.print(now.year(), DEC);
-    Serial.print(" ");
-	
-
-	// // Friendly printout the weekday
-    //     switch (now.dayOfWeek()) 
-    // {
-	// 	case 1:
-	// 	  Serial.print("MON");
-	// 	  break;
-	// 	case 2:
-	// 	  Serial.print("TUE");
-	// 	  break;
-	// 	case 3:
-	// 	  Serial.print("WED");
-	// 	  break;
-	// 	case 4:
-	// 	  Serial.print("THU");
-	// 	  break;
-	// 	case 5:
-	// 	  Serial.print("FRI");
-	// 	  break;
-	// 	case 6:
-	// 	  Serial.print("SAT");
-	// 	  break;
-	// 	case 7:
-	// 	  Serial.print("SUN");
-	// 	  break;
-	// }
-	// Serial.print(" ");
-	   
-    if(now.hour()<10){
-	switch (now.hour()) 
-    {
-		case 0:
-		  Serial.print("00");
-		  break;
-		case 1:
-		  Serial.print("01");
-		  break;
-		case 2:
-		  Serial.print("02");
-		  break;
-		case 3:
-		  Serial.print("03");
-		  break;
-		case 4:
-		  Serial.print("04");
-		  break;
-		case 5:
-		  Serial.print("05");
-		  break;
-		case 6:
-		  Serial.print("06");
-		  break;
-		case 7:
-		  Serial.print("07");
-		  break;
-		case 8:
-		  Serial.print("08");
-		  break;
-		case 9:
-		  Serial.print("09");
-		  break;	 
-	}
-	}
-	else{
-	Serial.print(now.hour(), DEC);
-	}
-
-    Serial.print(":");
-   
-    if(now.minute()<10){
-	switch (now.minute()) 
-    {
-		case 0:
-		  Serial.print("00");
-		  break;
-		case 1:
-		  Serial.print("01");
-		  break;
-		case 2:
-		  Serial.print("02");
-		  break;
-		case 3:
-		  Serial.print("03");
-		  break;
-		case 4:
-		  Serial.print("04");
-		  break;
-		case 5:
-		  Serial.print("05");
-		  break;
-		case 6:
-		  Serial.print("06");
-		  break;
-		case 7:
-		  Serial.print("07");
-		  break;
-		case 8:
-		  Serial.print("08");
-		  break;
-		case 9:
-		  Serial.print("09");
-		  break;
-		 
-	}
-	}
-	else{
-	Serial.print(now.minute(), DEC);
-	}
-
-    Serial.print(":");
- 
-    if(now.second()<10){
-	switch (now.second()) 
-    {
-		case 0:
-		  Serial.print("00");
-		  break;
-		case 1:
-		  Serial.print("01");
-		  break;
-		case 2:
-		  Serial.print("02");
-		  break;
-		case 3:
-		  Serial.print("03");
-		  break;
-		case 4:
-		  Serial.print("04");
-		  break;
-		case 5:
-		  Serial.print("05");
-		  break;
-		case 6:
-		  Serial.print("06");
-		  break;
-		case 7:
-		  Serial.print("07");
-		  break;
-		case 8:
-		  Serial.print("08");
-		  break;
-		case 9:
-		  Serial.print("09");
-		  break;
-		 
-	}
-	}
-	else{
-	Serial.print(now.second(), DEC);
-	}
-
-    Serial.println("");
-    
+void printTime(DateTime now) 
+{
+	now = rtc.now();			// get time;
+	Serial.print(now.year(), DEC);
+    Serial.print('/');
+    Serial.print(now.month(), DEC);
+    Serial.print('/');
+    Serial.print(now.day(), DEC);
+    Serial.print(" (");
+    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+    Serial.print(") ");
+    Serial.print(now.hour(), DEC);
+    Serial.print(':');
+    Serial.print(now.minute(), DEC);
+    Serial.print(':');
+    Serial.print(now.second(), DEC);
+    Serial.println();    
 }
-
 
 /*
 ..######..########.########.##.....##.########.
@@ -372,13 +223,12 @@ void setup()
 	Serial.println("");
 	Serial.println("*** Welcome to fish controller! ***");
 
-	RTC.begin();
-
-	RTC.adjust(DateTime(__DATE__, __TIME__));
+	rtc.begin();
+	// rtc.adjust(DateTime(__DATE__, __TIME__));    // adjust time
 
 	alarm(signal.WELCOME);
 
-	// sensors.setResolution(insideThermometer, 12);
+	// sensors.setResolution(insideThermometer, 12);	
 }
 
 /*
@@ -392,16 +242,16 @@ void setup()
 */
 void loop() 
 {
+	now = rtc.now();			// get time;
+
 //*************************
-	// if (millis() - timings.timing > 60000)
+	// if (millis() - timings.timing > 5000)
 	// { 
-	// 	timings.timing = millis(); 
-	// 	feedingNow = true;          // for remember feeding
-	// }
-	// //************************
-	// if (feedingNow) 
-	// {             // fish feeding
-	// 	fishFeeding();
+	// 	timings.timing = millis(); 	 
+		
+
+	// 	// Serial.println(RTC.now());
+
 	// }
 
 
@@ -410,7 +260,7 @@ void loop()
 	if (waterLevel == HIGH) 
 	{
 		if (waterLevelFlag == false) {		// signal
-			Serial.println("WaterLevel low!");
+			Serial.print("WaterLevel low! > ");
 			alarm(signal.WATER_LEVEL);
 			waterLevelFlag = true;	
 		}
@@ -430,8 +280,9 @@ void loop()
 	if ((temperature > params.TEMP_MAX) || (temperature < params.TEMP_MIN)) 
 	{
 		if (tempOverFlag == false) {			//signal	
-			Serial.println("Temperature over limit!");
-			Serial.println(temperature);
+			Serial.print("Temperature over limit! > temp: ");
+			Serial.print(temperature);
+			Serial.println(" > ");
 			alarm(signal.TEMPERATURE);
 			tempOverFlag = true;
 					}
@@ -446,15 +297,29 @@ void loop()
 
 //*** feed fish
 	// morning
-	if ((now.hour() == params.FEED_FIRST_H) && (now.minute() == params.FEED_FIRST_M))
+	if ((now.hour() == params.FEED_FIRST_H) && (now.minute() == params.FEED_FIRST_M) && (now.second() == 0))
+	{
+		startFeeding = false;
+		// fishFeeding();
+		
+	}
+
+	// // evening
+	// if ((now.hour() == params.FEED_SECOND_H) && (now.minute() == params.FEED_SECOND_M) && (now.second() == 0))
+	// {
+	// 	startFeeding = false;
+	// 	// fishFeeding();	
+	
+	// } 
+
+	if (startFeeding == false)   // fish feeding MF!!!!!
 	{
 		fishFeeding();
 	}
-	//night
-	if ((now.hour() == params.FEED_SECOND_H) && (now.minute() == params.FEED_SECOND_M))
-	{
-		fishFeeding();
-	}
+
+	
+
+
 }    
 
 /*
