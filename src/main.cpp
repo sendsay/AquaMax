@@ -6,53 +6,11 @@ Ver. 0.1a
 */
 
 #include <Arduino.h>
+#include <main.h>
 #include "DallasTemperature.h"
 #include "OneWire.h"
 #include "RTClib.h"
-
-/*
-.########..########.########
-.##.....##.##.......##......
-.##.....##.##.......##......
-.##.....##.######...######..
-.##.....##.##.......##......
-.##.....##.##.......##......
-.########..########.##......
-*/
-#define FILTER_SAMPLES   7
-
-#define RF			  2
-#define pump2 	      3
-#define pump1  		  4
-#define buzzer 		  5
-#define light  		  6
-#define level1 		  7
-#define level2		  8
-#define dpump3 		  9
-#define dpump2 		 10
-#define dpump1 		 11
-#define ONE_WIRE_BUS 12
-#define feeder		 13
-#define pHLevelPin   A1
-#define ecLevelPin 	 A0
-#define feederpos	 16
-#define AnalogPin 	  3
-#define RTC4		  4
-#define RTC5		  5
-
-/*
-..#######..########........##.########..######..########..######.
-.##.....##.##.....##.......##.##.......##....##....##....##....##
-.##.....##.##.....##.......##.##.......##..........##....##......
-.##.....##.########........##.######...##..........##.....######.
-.##.....##.##.....##.##....##.##.......##..........##..........##
-.##.....##.##.....##.##....##.##.......##....##....##....##....##
-..#######..########...######..########..######.....##.....######.
-*/
-OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-DallasTemperature sensors(&oneWire);// Pass our oneWire reference to Dallas Temperature. 
-RTC_DS1307 rtc;                 // Clock
-DateTime now;                   // Now date time
+#include "GravityTDS.h"
 
 /*
 .########.##.....##.##....##..######..########.####..#######..##....##
@@ -69,68 +27,20 @@ void printTime(DateTime now);     	// 	Print time and date
 // void prepareToFeeding();			//	Prepare function fishFeeding
 
 /*
-.##.....##....###....########.
-.##.....##...##.##...##.....##
-.##.....##..##...##..##.....##
-.##.....##.##.....##.########.
-..##...##..#########.##...##..
-...##.##...##.....##.##....##.
-....###....##.....##.##.....##
+..#######..########........##.########..######..########..######.
+.##.....##.##.....##.......##.##.......##....##....##....##....##
+.##.....##.##.....##.......##.##.......##..........##....##......
+.##.....##.########........##.######...##..........##.....######.
+.##.....##.##.....##.##....##.##.......##..........##..........##
+.##.....##.##.....##.##....##.##.......##....##....##....##....##
+..#######..########...######..########..######.....##.....######.
 */
-int status = 0;
-bool startFeeding = true;           // startFeeding flag for feeding
-int feed = 0;
-int waterLevel = 0;           // water level
-bool alarmNow = false;        // now have alarm
-// bool feedingNow = false;      // now feeding
-float temperature = 0;        // temperature from sensor
-bool waterLevelFlag = false;	// for first signal
-bool tempOverFlag = false;		// for fist signal
-char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
+OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+DallasTemperature sensors(&oneWire);// Pass our oneWire reference to Dallas Temperature. 
+RTC_DS1307 rtc;                 // Clock
+DateTime now;                   // Now date time
+GravityTDS gravityTds;			// Tds sensor
 
-/*
-..######..########.########..##.....##..######..########..######.
-.##....##....##....##.....##.##.....##.##....##....##....##....##
-.##..........##....##.....##.##.....##.##..........##....##......
-..######.....##....########..##.....##.##..........##.....######.
-.......##....##....##...##...##.....##.##..........##..........##
-.##....##....##....##....##..##.....##.##....##....##....##....##
-..######.....##....##.....##..#######...######.....##.....######.
-*/
-struct Parameters 
-{
-const unsigned long ALARM_REPEAT = 1500000L;     			// in 15 minutes
-	const int TEMP_MAX = 26;                                // max heating temp
-	const int TEMP_MIN = 4;                                 // min heating temp 
-	const int FEED_FIRST_H = 7;								// first feeding hour
-	const int FEED_FIRST_M = 0;								// first feeding minute
-	// const int FEED_SECOND_H = 10;							// first feeding hour
-	// const int FEED_SECOND_M = 40;							// first feeding minute
-	
-};
-Parameters params;
-
-struct Alarmsignals 
-{
-	const byte WATER_LEVEL = 3;
-	const byte TEMPERATURE = 4;
-	const byte TEMPERATURELOW = 4;
-	const byte WELCOME = 7;
-	const byte END_OPERATION = 1;
-	const byte PH_LEVEL = 5;
-	const byte EC_LEVEL = 5;
-	const byte START_FEEDING = 2;
-};
-Alarmsignals signal;
-
-struct Timings
-{
-	unsigned long timing;         
-	unsigned long timing2;
-	unsigned long timing3;
-	unsigned long timing4;
-};
-Timings timings;
 
 /*
 .########.##.....##.##....##..######..########.####..#######..##....##..######.
@@ -192,15 +102,37 @@ void printTime(DateTime now)
     Serial.print(now.month(), DEC);
     Serial.print('/');
     Serial.print(now.day(), DEC);
-    Serial.print(" (");
-    Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
-    Serial.print(") ");
     Serial.print(now.hour(), DEC);
     Serial.print(':');
     Serial.print(now.minute(), DEC);
     Serial.print(':');
     Serial.print(now.second(), DEC);
     Serial.println();    
+}
+
+int getMedianNum(int bArray[], int iFilterLen) 
+{
+      int bTab[iFilterLen];
+      for (byte i = 0; i<iFilterLen; i++)
+      bTab[i] = bArray[i];
+      int i, j, bTemp;
+      for (j = 0; j < iFilterLen - 1; j++) 
+      {
+      for (i = 0; i < iFilterLen - j - 1; i++) 
+          {
+        if (bTab[i] > bTab[i + 1]) 
+            {
+        bTemp = bTab[i];
+            bTab[i] = bTab[i + 1];
+        bTab[i + 1] = bTemp;
+         }
+      }
+      }
+      if ((iFilterLen & 1) > 0)
+    bTemp = bTab[(iFilterLen - 1) / 2];
+      else
+    bTemp = (bTab[iFilterLen / 2] + bTab[iFilterLen / 2 - 1]) / 2;
+      return bTemp;
 }
 
 /*
@@ -218,6 +150,11 @@ void setup()
 	pinMode(feederpos, INPUT);
 	pinMode(buzzer, OUTPUT);
 	pinMode(level1, INPUT);
+
+    gravityTds.setPin(TdsSensorPin);	//set pin Tds meter
+    gravityTds.setAref(5.0);  			//reference voltage on ADC, default 5.0V on Arduino UNO
+    gravityTds.setAdcRange(1024);  		//1024 for 10bit ADC;4096 for 12bit ADC
+    gravityTds.begin();  				//initialization
 
 	Serial.begin(9600);
 	Serial.println("");
@@ -245,14 +182,17 @@ void loop()
 	now = rtc.now();			// get time;
 
 //*************************
-	// if (millis() - timings.timing > 5000)
-	// { 
-	// 	timings.timing = millis(); 	 
-		
+	if (millis() - timings.timing > 5000)
+	{ 
+		timings.timing = millis(); 	 
 
-	// 	// Serial.println(RTC.now());
+		gravityTds.setTemperature(temperature);  	//set the temperature and execute temperature compensation
+		gravityTds.update(); 						//sample and calculate 
+		tdsValue = gravityTds.getTdsValue();  		// then get the value
+		Serial.print(tdsValue, 0);
+		Serial.println("ppm");		
 
-	// }
+	}
 
 
 //*** check water level
@@ -316,6 +256,11 @@ void loop()
 	{
 		fishFeeding();
 	}
+
+
+
+ 
+
 
 	
 
