@@ -170,11 +170,14 @@ void GravityTDS::ecCalibration(byte mode)
       rawECsolution = rawECsolution*(1.0+0.02*(temperature-25.0));
       if(enterCalibrationFlag)
       {
-         // Serial.print("rawECsolution:");
-         // Serial.print(rawECsolution);
-         // Serial.print("  ecvalue:");
-         // Serial.println(ecValue);
+         Serial.print("rawECsolution:");
+         Serial.print(rawECsolution);
+         Serial.print("  ecvalue:");
+         Serial.println(ecValue);
           KValueTemp = rawECsolution/(133.42*voltage*voltage*voltage - 255.86*voltage*voltage + 857.39*voltage);  //calibrate in the  buffer solution, such as 707ppm(1413us/cm)@25^c
+        Serial.print("Kvalue:"); 
+        Serial.println(KValueTemp);
+          
           if((rawECsolution>0) && (rawECsolution<2000) && (KValueTemp>0.25) && (KValueTemp<4.0))
           {
               Serial.println();

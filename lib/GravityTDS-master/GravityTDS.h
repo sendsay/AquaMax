@@ -19,7 +19,7 @@
 
 #include "Arduino.h"
 
-#define ReceivedBufferLength 15
+#define ReceivedBufferLength 50
 #define TdsFactor 0.5  // tds = ec / 2
 
 class GravityTDS

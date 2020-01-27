@@ -1,4 +1,11 @@
 /*
+Project: Aquarium controller
+Autor: Shpakov Vlad (aka SendSay)
+Date: 12.12.2019
+Ver. 0.1a
+*/
+
+/*
 .########..########.########
 .##.....##.##.......##......
 .##.....##.##.......##......

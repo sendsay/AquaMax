@@ -3,6 +3,9 @@ Project: Aquarium controller
 Autor: Shpakov Vlad (aka SendSay)
 Date: 12.12.2019
 Ver. 0.1a
+
+For convert uS to PPM divide uS on 1.56
+For convert PPM to uS mult PPM on 1.56
 */
 
 #include <Arduino.h>
@@ -255,14 +258,7 @@ void loop()
 	if (startFeeding == false)   // fish feeding MF!!!!!
 	{
 		fishFeeding();
-	}
-
-
-
- 
-
-
-	
+	}	
 
 
 }    
