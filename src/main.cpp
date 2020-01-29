@@ -10,10 +10,13 @@ For convert PPM to uS mult PPM on 1.56
 
 #include <Arduino.h>
 #include <main.h>
-#include "DallasTemperature.h"
-#include "OneWire.h"
-#include "RTClib.h"
-#include "GravityTDS.h"
+#include <DallasTemperature.h>
+#include <Wire.h>
+#include <RTClib.h>
+#include <GravityTDS.h>
+#include <DFRobot_PH.h>
+
+
 
 /*
 .########.##.....##.##....##..######..########.####..#######..##....##
@@ -26,7 +29,7 @@ For convert PPM to uS mult PPM on 1.56
 */
 void alarm(int count);            	// 	Alarm signal
 void fishFeeding();               	// 	Feeding fish
-void printTime(DateTime now);     	// 	Print time and date
+void printTime();     	// 	Print time and date
 // void prepareToFeeding();			//	Prepare function fishFeeding
 
 /*
@@ -38,12 +41,11 @@ void printTime(DateTime now);     	// 	Print time and date
 .##.....##.##.....##.##....##.##.......##....##....##....##....##
 ..#######..########...######..########..######.....##.....######.
 */
-OneWire oneWire(ONE_WIRE_BUS); // Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
-DallasTemperature sensors(&oneWire);// Pass our oneWire reference to Dallas Temperature. 
-RTC_DS1307 rtc;                 // Clock
-DateTime now;                   // Now date time
-GravityTDS gravityTds;			// Tds sensor
-
+OneWire oneWire(ONE_WIRE_BUS); 			// Setup a oneWire instance to communicate with any OneWire devices (not just Maxim/Dallas temperature ICs)
+DallasTemperature sensors(&oneWire);	// Pass our oneWire reference to Dallas Temperature. 
+RTC_DS1307 rtc;                 		// Clock
+DateTime now;                 			// Now date time
+GravityTDS gravityTds;					// Tds sensor
 
 /*
 .########.##.....##.##....##..######..########.####..#######..##....##..######.
@@ -60,10 +62,8 @@ void fishFeeding()
 	{          
 		if (startFeeding == false) 
 		{				
-			Serial.print("Fish feeding! > ");
-			
+			Serial.print("Fish feeding! > ");			
 			alarm(signal.START_FEEDING);
-
 			digitalWrite(feeder,HIGH);  //startFeeding
 			startFeeding = true;
 
@@ -71,20 +71,19 @@ void fishFeeding()
 			while (!(digitalRead(feederpos) == LOW) && (startFeeding == true)) 
 			{
 			//Wait until rotate
-			}
-			
+			}			
 			digitalWrite(feeder,LOW);   //stop
 			// startFeeding = false;  
-
 			alarm(signal.END_OPERATION);
 		}
-	}
+	}	
 }
 
 void alarm(int count) 
 {
-	if (not alarmNow) {
-		printTime(now);							
+	if (not alarmNow) 
+	{
+		printTime();							
 		alarmNow = true;
 		for (int i = 0; i < count; i++)
 		{
@@ -97,14 +96,17 @@ void alarm(int count)
 	}
 }
 
-void printTime(DateTime now) 
+void printTime() 
 {
 	now = rtc.now();			// get time;
-	Serial.print(now.year(), DEC);
+	Serial.print(now.year());
     Serial.print('/');
-    Serial.print(now.month(), DEC);
+    Serial.print(now.month());
     Serial.print('/');
     Serial.print(now.day(), DEC);
+	Serial.print("(");
+	Serial.print(daysOfTheWeek[now.dayOfTheWeek()]);
+	Serial.print(")");
     Serial.print(now.hour(), DEC);
     Serial.print(':');
     Serial.print(now.minute(), DEC);
@@ -164,7 +166,9 @@ void setup()
 	Serial.println("*** Welcome to fish controller! ***");
 
 	rtc.begin();
-	// rtc.adjust(DateTime(__DATE__, __TIME__));    // adjust time
+
+
+//	 rtc.adjust(DateTime(__DATE__, __TIME__));    // adjust time
 
 	alarm(signal.WELCOME);
 
@@ -182,7 +186,9 @@ void setup()
 */
 void loop() 
 {
+
 	now = rtc.now();			// get time;
+
 
 //*************************
 	if (millis() - timings.timing > 5000)
@@ -192,11 +198,10 @@ void loop()
 		gravityTds.setTemperature(temperature);  	//set the temperature and execute temperature compensation
 		gravityTds.update(); 						//sample and calculate 
 		tdsValue = gravityTds.getTdsValue();  		// then get the value
-		Serial.print(tdsValue, 0);
-		Serial.println("ppm");		
+		Serial.print(tdsValue, 0);		
+		Serial.println("ppm");	
 
 	}
-
 
 //*** check water level
 	waterLevel = digitalRead(level1);      
