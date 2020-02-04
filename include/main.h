@@ -28,12 +28,14 @@ Ver. 0.1a
 #define dpump1 		 11
 #define ONE_WIRE_BUS 12
 #define feeder		 13
-// #define pHLevelPin   A1
-// #define ecLevelPin 	 A0
 #define feederpos	 16
 #define AnalogPin 	  3
 #define RTC4		  4
 #define RTC5		  5
+#define PhMax		  8
+#define PhMin		  6
+
+
 
 /*
 .##.....##....###....########.
@@ -56,21 +58,18 @@ bool tempOverFlag = false;		// for fist signal
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
 // Ph meter
-float calibration = 8.90; //change this value to calibrate
-const int analogInPin = A0; 
-int sensorValue = 0; 
-unsigned long int avgValue; 
-float b;
-int buf[10],temp;
+// float calibration = 9.0; //change this value to calibrate
+// const int analogInPin = A0; 
+// int sensorValue = 0; 
+// unsigned long int avgValue; 
+// float b;
+// int buf[10],temp;
 
 float tdsValue = 0;
 #define TdsSensorPin A1
-// #define VREF 5.0      // analog reference voltage(Volt) of the ADC
-// #define SCOUNT  30           // sum of sample point
-// int analogBuffer[SCOUNT];    // store the analog value in the array, read from ADC
-// int analogBufferTemp[SCOUNT];
-// int analogBufferIndex = 0,copyIndex = 0;
-// float averageVoltage = 0;
+
+float  voltagePH,phValue;
+
 /*
 ..######..########.########..##.....##..######..########..######.
 .##....##....##....##.....##.##.....##.##....##....##....##....##
