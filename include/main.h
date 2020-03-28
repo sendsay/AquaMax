@@ -32,8 +32,8 @@ Ver. 0.1a
 #define AnalogPin 	  3
 #define RTC4		  4
 #define RTC5		  5
-#define PhMax		  8
-#define PhMin		  6
+#define PhMax		  8.5
+#define PhMin		  6.5
 
 
 
@@ -57,18 +57,11 @@ bool waterLevelFlag = false;	// for first signal
 bool tempOverFlag = false;		// for fist signal
 char daysOfTheWeek[7][12] = {"Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"};
 
-// Ph meter
-// float calibration = 9.0; //change this value to calibrate
-// const int analogInPin = A0; 
-// int sensorValue = 0; 
-// unsigned long int avgValue; 
-// float b;
-// int buf[10],temp;
 
 float tdsValue = 0;
 #define TdsSensorPin A1
 
-float  voltagePH,phValue;
+boolean pHOverFlag = false; 
 
 /*
 ..######..########.########..##.....##..######..########..######.
@@ -81,10 +74,10 @@ float  voltagePH,phValue;
 */
 struct Parameters 
 {
-const unsigned long ALARM_REPEAT = 1500000L;     			// in 15 minutes
+const unsigned long ALARM_REPEAT = 15000L;     			// in 15 minutes
 	const int TEMP_MAX = 26;                                // max heating temp
 	const int TEMP_MIN = 4;                                 // min heating temp 
-	const int FEED_FIRST_H = 7;								// first feeding hour
+	const int FEED_FIRST_H = 10;								// first feeding hour
 	const int FEED_FIRST_M = 0;								// first feeding minute
 	// const int FEED_SECOND_H = 10;							// first feeding hour
 	// const int FEED_SECOND_M = 40;							// first feeding minute

@@ -103,102 +103,121 @@ void loop()
 	now = rtc.now();			// get time;
 
 //*************************
-	if (millis() - timings.timing > 2000)
-	{ 
-		timings.timing = millis(); 	 
+// 	if (millis() - timings.timing > 10000)
+// 	{ 
+// 		timings.timing = millis(); 	 
 
-		gravityTds.setTemperature(temperature);  	//set the temperature and execute temperature compensation
-		gravityTds.update(); 						//sample and calculate 
-		tdsValue = gravityTds.getTdsValue();  		// then get the value
+// 		gravityTds.setTemperature(temperature);  	//set the temperature and execute temperature compensation
+// 		gravityTds.update(); 						//sample and calculate 
+// 		tdsValue = gravityTds.getTdsValue();  		// then get the value
 		
-		Serial.print("TDS: ");
-		Serial.print(tdsValue, 0);		
-		Serial.print(" ppm   ");	
-		Serial.print(tdsValue * 1.56, 0);
-		Serial.println(" mS");
+// 		Serial.print("TDS: ");
+// 		Serial.print(tdsValue, 0);		
+// 		Serial.print(" ppm   ");	
+// 		Serial.print(tdsValue * 1.56, 0);
+// 		Serial.println(" mS");
 
-    	Serial.print("Voltage:");
-        Serial.print(voltage,2);
-        Serial.print("    pH value: ");
-    	Serial.println(pHValue,2);
-
-		Serial.print("Temp: ");
-		Serial.print(temperature);
-		Serial.println("^C");
-
-
-		Serial.println("*****************************************");
-
-	}
-
-//*** check Ph data
-  static unsigned long samplingTime = millis();
-  static unsigned long printTime = millis();
-  if(millis()-samplingTime > samplingInterval)
-  {
-      pHArray[pHArrayIndex++]=analogRead(SensorPin);
-      if(pHArrayIndex==ArrayLenth)pHArrayIndex=0;
-      voltage = avergearray(pHArray, ArrayLenth)*5.0/1024;
-      pHValue = 3.5*voltage+Offset;
-      samplingTime=millis();
-  }
-//   if(millis() - printTime > printInterval)   //Every 800 milliseconds, print a numerical, convert the state of the LED indicator
-//   {
-//     Serial.print("Voltage:");
+//     	Serial.print("Voltage:");
 //         Serial.print(voltage,2);
 //         Serial.print("    pH value: ");
-//     		Serial.println(pHValue,2);
-//         digitalWrite(LED,digitalRead(LED)^1);
-//         printTime=millis();
-//   }
+//     	Serial.println(pHValue,2);
+
+// 		Serial.print("Temp: ");
+// 		Serial.print(temperature);
+// 		Serial.println("^C");
 
 
-//*** check water level
-	waterLevel = digitalRead(level1);      
-	if (waterLevel == HIGH) 
-	{
-		if (waterLevelFlag == false) {		// signal
-			Serial.print("WaterLevel low! > ");
-			alarm(signal.WATER_LEVEL);
-			waterLevelFlag = true;	
-		}
-		if (millis() - timings.timing2 > params.ALARM_REPEAT) //timer
-		{ 
-			timings.timing2 = millis(); 
-			waterLevelFlag = false;
-		} 
-	} else {
-		waterLevelFlag = false;
-	}
+// 		Serial.println("*****************************************");
 
-//*** Check temperature
-	sensors.requestTemperatures();
-	temperature = sensors.getTempCByIndex(0);
-
-	if ((temperature > params.TEMP_MAX) || (temperature < params.TEMP_MIN)) 
-	{
-		if (tempOverFlag == false) {			//signal	
-			Serial.print("Temperature over limit! > temp: ");
-			Serial.print(temperature);
-			Serial.println(" > ");
-			alarm(signal.TEMPERATURE);
-			tempOverFlag = true;
-					}
-		if (millis() - timings.timing3 > params.ALARM_REPEAT)  //timer
-		{ 
-			timings.timing3 = millis(); 
-			tempOverFlag = false;
-		}
-	} else {
-		tempOverFlag = false;
-	}
-
-//***Check Tds
-	if (phValue >= PhMax or phValue =<)
-	{
-		/* code */
-	}
 	
+
+
+// //   if(millis() - printTime > printInterval)   //Every 800 milliseconds, print a numerical, convert the state of the LED indicator
+// //   {
+// //     Serial.print("Voltage:");
+// //         Serial.print(voltage,2);
+// //         Serial.print("    pH value: ");
+// //     		Serial.println(pHValue,2);
+// //         digitalWrite(LED,digitalRead(LED)^1);
+// //         printTime=millis();
+// //   }
+	
+
+
+// //*** check water level
+// 	waterLevel = digitalRead(level1);      
+// 	if (waterLevel == HIGH) 
+// 	{
+// 		if (waterLevelFlag == false) {		// signal
+// 			Serial.print("WaterLevel low! > ");
+// 			alarm(signal.WATER_LEVEL);
+// 			waterLevelFlag = true;	
+// 		}
+// 		if (millis() - timings.timing2 > params.ALARM_REPEAT) //timer
+// 		{ 
+// 			timings.timing2 = millis(); 
+// 			waterLevelFlag = false;
+// 		} 
+// 	} else {
+// 		waterLevelFlag = false;
+// 	}
+
+// //*** Check temperature
+// 	sensors.requestTemperatures();
+// 	temperature = sensors.getTempCByIndex(0);
+
+// 	if ((temperature > params.TEMP_MAX) || (temperature < params.TEMP_MIN)) 
+// 	{
+// 		if (tempOverFlag == false) {			//signal	
+// 			Serial.print("Temperature over limit! > temp: ");
+// 			Serial.print(temperature);
+// 			Serial.println(" > ");
+// 			alarm(signal.TEMPERATURE);
+// 			tempOverFlag = true;
+// 		}
+// 		if (millis() - timings.timing3 > params.ALARM_REPEAT)  //timer
+// 		{ 
+// 			timings.timing3 = millis(); 
+// 			tempOverFlag = false;
+// 		}
+// 	} else {
+// 		tempOverFlag = false;
+// 	}
+
+// //***Check ph
+// 	if ((pHValue > PhMax) or (pHValue < PhMin))
+// 	{
+// 		if (pHOverFlag == false)
+// 		{
+// 			Serial.print("Ph level over limit > pH level: ");
+// 			Serial.print(pHValue, 2);
+// 			alarm(signal.PH_LEVEL);
+// 			pHOverFlag = true;
+// 		}
+// 		if (millis() - timings.timing4 > params.ALARM_REPEAT)
+// 		{
+// 			timings.timing4 = millis();
+// 			pHOverFlag = false;
+// 		}			
+// 	} else {
+// 		pHOverFlag = false;
+// 	}
+
+// //***Check TDS
+
+// }
+		
+// //*** check Ph data
+//   static unsigned long samplingTime = millis();
+// //   static unsigned long printTime = millis();
+//   if(millis()-samplingTime > samplingInterval)
+//   {
+//       pHArray[pHArrayIndex++]=analogRead(SensorPin);
+//       if(pHArrayIndex==ArrayLenth)pHArrayIndex=0;
+//       voltage = avergearray(pHArray, ArrayLenth)*5.0/1024;
+//       pHValue = 3.5*voltage+Offset;
+//       samplingTime=millis();
+//   }
 
 //*** feed fish
 	// morning
@@ -223,7 +242,7 @@ void loop()
 	}	
 
 
-}   
+}    //end loop
 
 /*
 .########.##.....##.##....##..######..########.####..#######..##....##..######.
